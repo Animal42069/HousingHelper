@@ -49,6 +49,10 @@
       <HintPath>..\packages\IllusionLibs.BepInEx.Harmony.2.2.0.1\lib\net35\BepInEx.Harmony.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Cinemachine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IllusionLibs.AIGirl.Cinemachine.2018.2.21.3\lib\net46\Cinemachine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -63,6 +67,10 @@
     </Reference>
     <Reference Include="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\IllusionLibs.AIGirl.UnityEngine.CoreModule.2018.2.21.3\lib\net46\UnityEngine.CoreModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IllusionLibs.AIGirl.UnityEngine.PhysicsModule.2018.2.21.3\lib\net46\UnityEngine.PhysicsModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
@@ -82,7 +90,11 @@
     <Error Condition="!Exists('..\packages\IllusionLibs.AIGirl.Assembly-CSharp.2020.5.29.2\build\IllusionLibs.AIGirl.Assembly-CSharp.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\IllusionLibs.AIGirl.Assembly-CSharp.2020.5.29.2\build\IllusionLibs.AIGirl.Assembly-CSharp.targets'))" />
     <Error Condition="!Exists('..\packages\IllusionLibs.BepInEx.Harmony.2.2.0.1\build\IllusionLibs.BepInEx.Harmony.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\IllusionLibs.BepInEx.Harmony.2.2.0.1\build\IllusionLibs.BepInEx.Harmony.targets'))" />
     <Error Condition="!Exists('..\packages\IllusionLibs.AIGirl.UnityEngine.CoreModule.2018.2.21.3\build\IllusionLibs.AIGirl.UnityEngine.CoreModule.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\IllusionLibs.AIGirl.UnityEngine.CoreModule.2018.2.21.3\build\IllusionLibs.AIGirl.UnityEngine.CoreModule.targets'))" />
+    <Error Condition="!Exists('..\packages\IllusionLibs.AIGirl.Cinemachine.2018.2.21.3\build\IllusionLibs.AIGirl.Cinemachine.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\IllusionLibs.AIGirl.Cinemachine.2018.2.21.3\build\IllusionLibs.AIGirl.Cinemachine.targets'))" />
+    <Error Condition="!Exists('..\packages\IllusionLibs.AIGirl.UnityEngine.PhysicsModule.2018.2.21.3\build\IllusionLibs.AIGirl.UnityEngine.PhysicsModule.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\IllusionLibs.AIGirl.UnityEngine.PhysicsModule.2018.2.21.3\build\IllusionLibs.AIGirl.UnityEngine.PhysicsModule.targets'))" />
   </Target>
   <Import Project="..\packages\IllusionLibs.BepInEx.Harmony.2.2.0.1\build\IllusionLibs.BepInEx.Harmony.targets" Condition="Exists('..\packages\IllusionLibs.BepInEx.Harmony.2.2.0.1\build\IllusionLibs.BepInEx.Harmony.targets')" />
   <Import Project="..\packages\IllusionLibs.AIGirl.UnityEngine.CoreModule.2018.2.21.3\build\IllusionLibs.AIGirl.UnityEngine.CoreModule.targets" Condition="Exists('..\packages\IllusionLibs.AIGirl.UnityEngine.CoreModule.2018.2.21.3\build\IllusionLibs.AIGirl.UnityEngine.CoreModule.targets')" />
+  <Import Project="..\packages\IllusionLibs.AIGirl.Cinemachine.2018.2.21.3\build\IllusionLibs.AIGirl.Cinemachine.targets" Condition="Exists('..\packages\IllusionLibs.AIGirl.Cinemachine.2018.2.21.3\build\IllusionLibs.AIGirl.Cinemachine.targets')" />
+  <Import Project="..\packages\IllusionLibs.AIGirl.UnityEngine.PhysicsModule.2018.2.21.3\build\IllusionLibs.AIGirl.UnityEngine.PhysicsModule.targets" Condition="Exists('..\packages\IllusionLibs.AIGirl.UnityEngine.PhysicsModule.2018.2.21.3\build\IllusionLibs.AIGirl.UnityEngine.PhysicsModule.targets')" />
 </Project>
