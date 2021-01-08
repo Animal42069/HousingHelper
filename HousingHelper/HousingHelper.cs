@@ -13,10 +13,10 @@ namespace HousingHelper
 
     public class HousingHelper : BaseUnityPlugin
     {
-        public const string VERSION = "1.0.1.0";
+        public const string VERSION = "1.1.1.0";
         private const string GUID = "animal42069.aihousinghelper";
 
-  //      internal static ConfigEntry<float> _moveSnap;
+        internal static ConfigEntry<float> _moveSnap;
         internal static ConfigEntry<float> _rotationSnap;
         internal static ConfigEntry<bool> _randomManipulate;
         internal static ConfigEntry<bool> _placeAtSelection;
@@ -33,7 +33,7 @@ namespace HousingHelper
 
         private void Awake()
         {
-    //        _moveSnap = Config.Bind("Settings", "Move Snap", 1f, "Grid snap for object movement");
+            _moveSnap = Config.Bind("Settings", "Move Snap", 1f, "Grid snap for object movement");
             _rotationSnap = Config.Bind("Settings", "Rotation Snap", 15f, "Angle in degrees to snap X and Z rotations to");
             _allowNegativeY = Config.Bind("Settings", "Allow objects below world plane", true, "Allow objects to be moved/rotated below the world plane");
             _randomManipulate = Config.Bind("Settings", "Random Manipulation", false, "Changes the behavior of the two manipulate buttons so that they rotate a random amount instead of +/- 90 degrees");
@@ -344,12 +344,15 @@ namespace HousingHelper
         private static void MouseSelectObjects()
         {
             var ui = Singleton<CraftScene>.Instance.GetComponentInChildren<RectTransform>();
+
             float resolutionWidth = 2 * ui.localPosition.x;
             float resolutionHeight= 2 * ui.localPosition.y;
+
             var borderWidth = resolutionWidth * 0.15f;
             var borderHeight = resolutionHeight * 0.1f;
 
             Vector3 mousePosition = Input.mousePosition;
+
             if (mousePosition.x < borderWidth || mousePosition.x > (resolutionWidth - borderWidth))
                 return;
             if (mousePosition.y < borderHeight|| mousePosition.y > (resolutionHeight - borderHeight))
@@ -363,11 +366,16 @@ namespace HousingHelper
                 return;
 
             ObjectCtrl selectedObject = null;
-            foreach (OCItem item in Singleton<CraftScene>.Instance.UICtrl.ListUICtrl.VirtualizingTreeView.Items)
+            foreach (var item in Singleton<CraftScene>.Instance.UICtrl.ListUICtrl.VirtualizingTreeView.Items)
             {
-                if (item != null && item.ItemComponent == itemComponent)
+                if (item.GetType() != typeof(OCItem))
+                    continue;
+
+                var ocItem = item as OCItem;
+
+                if (item != null && ocItem.ItemComponent == itemComponent)
                 {
-                    selectedObject = item;
+                    selectedObject = ocItem;
                     break;
                 }
             }
