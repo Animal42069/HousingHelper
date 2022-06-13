@@ -13,8 +13,8 @@ namespace HousingHelper
 
     public class HousingHelper : BaseUnityPlugin
     {
-        public const string VERSION = "1.1.1.0";
-        private const string GUID = "animal42069.aihousinghelper";
+        public const string VERSION = "1.2.0.0";
+        internal const string GUID = "animal42069.aihousinghelper";
 
         internal static ConfigEntry<float> _moveSnap;
         internal static ConfigEntry<float> _rotationSnap;
@@ -23,15 +23,17 @@ namespace HousingHelper
         internal static ConfigEntry<bool> _selectAddedObject;
         internal static ConfigEntry<bool> _allowNegativeY;
         internal static ConfigEntry<float> _cameraMoveSpeed;
-        internal static ConfigEntry<bool> _orthographicCamera;
+        internal static ConfigEntry<float> _mouseSelectRadius;
+        internal static ConfigEntry<KeyboardShortcut> _mouseMoveKey { get; set; }
+        internal static ConfigEntry<KeyboardShortcut> _scrollRotateKey { get; set; }
+        internal static ConfigEntry<KeyboardShortcut> _scrollMoveKey { get; set; }
 
-        private static Housing.CraftCamera craftCamera;
- //       private static Camera housingCamera;
-        private static bool inHousingMode = false;
+        internal static Housing.CraftCamera craftCamera;
+        internal static bool inHousingMode = false;
 
-        private static float buttonDownTime = 0;
+        internal static float buttonDownTime = 0;
 
-        private void Awake()
+        internal void Awake()
         {
             _moveSnap = Config.Bind("Settings", "Move Snap", 1f, "Grid snap for object movement");
             _rotationSnap = Config.Bind("Settings", "Rotation Snap", 15f, "Angle in degrees to snap X and Z rotations to");
@@ -41,21 +43,24 @@ namespace HousingHelper
             _selectAddedObject = Config.Bind("Settings", "Select Added Object", true, "Automatically select an object when it is added.");
             (
                 _cameraMoveSpeed = Config.Bind("Settings", "Camera Movement Speed", 40f, "Amount to move camera when arrow keys are used.")).SettingChanged += (s, e) =>
-            { AdjustCameraSettings(_cameraMoveSpeed.Value, _orthographicCamera.Value); };
-            (_orthographicCamera = Config.Bind("Settings", "Orthographic Camera", true, "Orthographic Camera.")).SettingChanged += (s, e) =>
-            { AdjustCameraSettings(_cameraMoveSpeed.Value, _orthographicCamera.Value); };
+            { AdjustCameraSettings(_cameraMoveSpeed.Value); };
+
+            _mouseSelectRadius = Config.Bind("Settings", "Move Select Radius", 1.0f, "Radius used for selecting objects.  A larger value makes it easier to select an object, but could lead to selecting the wrong object.");
+            _mouseMoveKey = Config.Bind("Settings", "Mouse Move Key", new KeyboardShortcut(KeyCode.LeftAlt), "While this key is pressed, the currently selected objects will move to where the mouse is.");
+            _scrollRotateKey = Config.Bind("Settings", "Mouse Scroll Rotate Key", new KeyboardShortcut(KeyCode.LeftAlt), "While this key is pressed, the currently selected objects will rotate with the mouse scroll wheel.");
+            _scrollMoveKey = Config.Bind("Settings", "Mouse Sroll Raise/Lower Key", new KeyboardShortcut(KeyCode.LeftControl), "While this key is pressed, the currently selected objects will raise/lower with the mouse scroll wheel.");
 
             Harmony.CreateAndPatchAll(typeof(HousingHelper));
         }
 
-        private static float SnapRotation(float value)
+        internal static float SnapRotation(float value)
         {
             bool negativeValue = value < 0f;
             return Mathf.RoundToInt(Mathf.Abs(value) / _rotationSnap.Value) * _rotationSnap.Value * ((!negativeValue) ? 1 : -1);
         }
 
         [HarmonyPrefix, HarmonyPatch(typeof(GuideManager), "CheckRot")]
-        private static bool HousingGuideManager_CheckRot(ref bool __result)
+        internal static bool HousingGuideManager_CheckRot(ref bool __result)
         {
             if (!_allowNegativeY.Value)
                 return true;
@@ -65,7 +70,7 @@ namespace HousingHelper
         }
 
         [HarmonyPrefix, HarmonyPatch(typeof(GuideManager), "CorrectPos")]
-        private static bool HousingGuideManager_CorrectPos(ref bool __result)
+        internal static bool HousingGuideManager_CorrectPos(ref bool __result)
         {
             if (!_allowNegativeY.Value)
                 return true;
@@ -75,26 +80,18 @@ namespace HousingHelper
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(GuideRotation), "OnDrag")]
-        private static void HousingGuideRotation_OnDrag(ObjectCtrl ___objectCtrl)
+        internal static void HousingGuideRotation_OnDrag(ObjectCtrl ___objectCtrl)
         {
             Vector3 eulerAngles = ___objectCtrl.LocalEulerAngles;
             ___objectCtrl.LocalEulerAngles = new Vector3(SnapRotation(eulerAngles.x), SnapRotation(eulerAngles.y), SnapRotation(eulerAngles.z));
         }
 
         [HarmonyPrefix, HarmonyPatch(typeof(GuideObject), "Awake")]
-        private static void HousingGuideObject_Awake(ref GuideBase[] ___guide)
+        internal static void HousingGuideObject_Awake(ref GuideBase[] ___guide)
         {
             if (___guide.Length != 5 || ___guide[3] == null)
                 return;
 
-    //        Housing.CraftCamera camera = new Housing.CraftCamera();
-            /*
-                        Cinemachine.LensSettings settings = camera.lens;
-                    settings.Orthographic = true;
-
-                        camera.lens = settings;
-                        camera.moveSpeed = 15;
-            */
             GameObject rotationX = Instantiate(___guide[3].gameObject);
             rotationX.name = "X";
             rotationX.transform.name = "X";
@@ -129,7 +126,7 @@ namespace HousingHelper
         }
 
         [HarmonyPrefix, HarmonyPatch(typeof(ObjectCtrl), nameof(ObjectCtrl.Position), MethodType.Setter)]
-        private static bool HousingObjectCtrl_PositionSetter(ObjectCtrl __instance, Vector3 value)
+        internal static bool HousingObjectCtrl_PositionSetter(ObjectCtrl __instance, Vector3 value)
         {
             if (!_allowNegativeY.Value)
                 return true;
@@ -141,7 +138,7 @@ namespace HousingHelper
         }
 
         [HarmonyPrefix, HarmonyPatch(typeof(ManipulateUICtrl), "Rotation")]
-        private static bool HousingManipulateUICtrl_Rotation()
+        internal static bool HousingManipulateUICtrl_Rotation()
         {
             if (!_randomManipulate.Value)
                 return true;
@@ -161,7 +158,7 @@ namespace HousingHelper
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(Housing.Command.AddItemCommand), "Do")]
-        private static void HousingCommand_AddItemCommandDo(ObjectCtrl ___objectCtrl)
+        internal static void HousingCommand_AddItemCommandDo(ObjectCtrl ___objectCtrl)
         {
             if (_placeAtSelection.Value && Singleton<Selection>.Instance.SelectObject != null)
                 ___objectCtrl.LocalPosition = Singleton<Selection>.Instance.SelectObject.LocalPosition;
@@ -178,20 +175,17 @@ namespace HousingHelper
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(CraftScene), "Start")]
-        private static void HousingCraftScene_Start(Housing.CraftCamera ___craftCamera, Camera[] ___cameras)
+        internal static void HousingCraftScene_Start(Housing.CraftCamera ___craftCamera, Camera[] ___cameras)
         {
-            Console.WriteLine("HousingCraftCamera_Start");
-
             craftCamera = ___craftCamera;
             if (___cameras.IsNullOrEmpty())
                 return;
-  //          housingCamera = ___cameras[0];
 
-            AdjustCameraSettings(_cameraMoveSpeed.Value, _orthographicCamera.Value);
+            AdjustCameraSettings(_cameraMoveSpeed.Value);
         }
 
 
-        private static void AdjustCameraSettings(float moveSpeed, bool orthographic)
+        internal static void AdjustCameraSettings(float moveSpeed)
         {
             if (craftCamera == null)
                 return;
@@ -200,28 +194,16 @@ namespace HousingHelper
             craftCamera.keyMoveSpeed = 2 * moveSpeed;
             craftCamera.xRotSpeed = moveSpeed;
             craftCamera.yRotSpeed = moveSpeed;
-            /*
-                        if (housingCamera == null)
-                            return;
-
-                        Cinemachine.LensSettings settings = craftCamera.lens;
-                        settings.Orthographic = orthographic;
-                        settings.OrthographicSize = 500f;
-                        craftCamera.lens = settings;
-                        housingCamera.orthographic = orthographic;
-                        housingCamera.orthographicSize = 500f;
-
-                        Console.WriteLine($"housingCamera.orthographicSize {housingCamera.orthographicSize}");*/
         }
 
         [HarmonyPrefix, HarmonyPatch(typeof(Manager.Housing), "StartHousing")]
-        private static void Housing_StartHousing()
+        internal static void Housing_StartHousing()
         {
             inHousingMode = true;
         }
 
         [HarmonyPostfix, HarmonyPatch(typeof(Manager.Housing), "EndHousing")]
-        private static void Housing_EndHousing()
+        internal static void Housing_EndHousing()
         {
             inHousingMode = false;
         }
@@ -234,32 +216,50 @@ namespace HousingHelper
             if (Input.GetMouseButtonDown(0))
                 buttonDownTime = Time.time;
 
-            if (Input.GetKey(KeyCode.LeftAlt))
+            if (_mouseMoveKey.Value.IsPressed())
             {
                 if (Singleton<Selection>.Instance.SelectObject == null)
                     return;
 
-                if (Input.GetAxis("Mouse ScrollWheel") != 0f)
-                    ScrollWheelRotateObjects(Input.GetAxis("Mouse ScrollWheel") > 0);
-                else
+                if (Input.GetAxis("Mouse ScrollWheel") == 0f)
+                {
                     MouseMoveObjects();
+                    return;
+                }
             }
-            else if (Input.GetKey(KeyCode.LeftControl))
+
+            if (_scrollRotateKey.Value.IsPressed())
             {
                 if (Singleton<Selection>.Instance.SelectObject == null)
                     return;
 
                 if (Input.GetAxis("Mouse ScrollWheel") != 0f)
-                    ScrollWheelMoveObjects(Input.GetAxis("Mouse ScrollWheel") > 0);
+                {
+                    ScrollWheelRotateObjects(Input.GetAxis("Mouse ScrollWheel") > 0);
+                    return;
+                }
             }
-            else if (Input.GetMouseButtonUp(0))
+
+            if (_scrollMoveKey.Value.IsPressed())
+            {
+                if (Singleton<Selection>.Instance.SelectObject == null)
+                    return;
+
+                if (Input.GetAxis("Mouse ScrollWheel") != 0f)
+                {
+                    ScrollWheelMoveObjects(Input.GetAxis("Mouse ScrollWheel") > 0);
+                    return;
+                }
+            }
+
+            if (Input.GetMouseButtonUp(0))
             {
                 if ((Time.time - buttonDownTime) < 0.2)
                     MouseSelectObjects();
             }
         }
 
-        private static void ScrollWheelMoveObjects(bool up)
+        internal static void ScrollWheelMoveObjects(bool up)
         {
             var selectObjects = Singleton<Selection>.Instance.SelectObjects;
 
@@ -271,7 +271,7 @@ namespace HousingHelper
                 selectObject.Position += up ? new Vector3(0, 1, 0) : new Vector3(0, -1, 0);
             }
         }
-        private static void ScrollWheelRotateObjects(bool clockwise)
+        internal static void ScrollWheelRotateObjects(bool clockwise)
         {
             var selectedObject = Singleton<Selection>.Instance.SelectObject;
             float rotation = clockwise ? _rotationSnap.Value : -_rotationSnap.Value;
@@ -303,7 +303,7 @@ namespace HousingHelper
             }
         }
 
-        private static Vector2 RotatePoint(Vector2 pointToRotate, Vector2 centerPoint, float angleInDegrees)
+        internal static Vector2 RotatePoint(Vector2 pointToRotate, Vector2 centerPoint, float angleInDegrees)
         {
             double angleInRadians = angleInDegrees * (Math.PI / 180);
             double cosTheta = Math.Cos(angleInRadians);
@@ -312,7 +312,7 @@ namespace HousingHelper
                                (float)(sinTheta * (pointToRotate.x - centerPoint.x) + cosTheta * (pointToRotate.y - centerPoint.y) + centerPoint.y));
         }
 
-        private static void MouseMoveObjects()
+        internal static void MouseMoveObjects()
         {
             var selectedObject = Singleton<Selection>.Instance.SelectObject;
             var originalPosition = selectedObject.Position;
@@ -323,7 +323,8 @@ namespace HousingHelper
                 return;
 
             Vector3 movePosition = mouseRay.GetPoint(distanceToPlane);
-            selectedObject.Position = new Vector3(Mathf.Floor(movePosition.x + 0.5f),
+
+           selectedObject.Position = new Vector3(Mathf.Floor(movePosition.x + 0.5f),
                 selectedObject.Position.y,
                 Mathf.Floor(movePosition.z + 0.5f));
 
@@ -332,6 +333,7 @@ namespace HousingHelper
                 return;
             
             var objectMovement = selectedObject.Position - originalPosition;
+
             foreach (var selectObject in selectObjects)
             {
                 if (selectObject == null || selectObject == selectedObject)
@@ -341,7 +343,7 @@ namespace HousingHelper
             }
         }
 
-        private static void MouseSelectObjects()
+        internal static void MouseSelectObjects()
         {
             var ui = Singleton<CraftScene>.Instance.GetComponentInChildren<RectTransform>();
 
@@ -358,11 +360,20 @@ namespace HousingHelper
             if (mousePosition.y < borderHeight|| mousePosition.y > (resolutionHeight - borderHeight))
                 return;
 
-            if (!Physics.Raycast(Camera.main.ScreenPointToRay(mousePosition), out var hit, Mathf.Infinity))
+            var hitObjects = Physics.SphereCastAll(Camera.main.ScreenPointToRay(mousePosition), _mouseSelectRadius.Value, Mathf.Infinity, 1 << LayerMask.NameToLayer("Map"));
+
+            if (hitObjects.IsNullOrEmpty())
                 return;
 
-            var itemComponent = hit.collider.GetComponentInParent<ItemComponent>();
-            if (itemComponent == null)         
+            ItemComponent itemComponent = null;
+            foreach (var hit in hitObjects)
+            {
+                itemComponent = hit.collider.GetComponentInParent<ItemComponent>();
+                if (itemComponent != null)
+                    break;
+            }
+
+            if (itemComponent == null)
                 return;
 
             ObjectCtrl selectedObject = null;
